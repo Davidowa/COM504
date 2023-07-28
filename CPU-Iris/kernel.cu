@@ -103,15 +103,14 @@ float root_mean_squared_error(float* y_true, float* y_pred, int n) {
 }
 
 // CUDA Kernel function to perform multivariate linear regression
-__global__ void linear_regression(float* x1, float* x2, float* x3, float* x4, float* y, float* m1, float* m2, float* m3, float* m4, float* c, int n) {
+__global__ void linear_regression(float* x1, float* x2, float* x3, float* y, float* m1, float* m2, float* m3, float* c) {
     int idx = threadIdx.x;
     float x1_val = x1[idx];
     float x2_val = x2[idx];
     float x3_val = x3[idx];
-    float x4_val = x4[idx];
     float y_val = y[idx];
 
-    float prediction = (*m1) * x1_val + (*m2) * x2_val + (*m3) * x3_val + (*m4) * x4_val + (*c);
+    float prediction = (*m1) * x1_val + (*m2) * x2_val + (*m3) * x3_val + (*c);
     float error = y_val - prediction;
 
     // atomicAdd is a function provided by CUDA that performs an atomic (i.e., thread-safe) addition operation.
@@ -129,19 +128,17 @@ __global__ void linear_regression(float* x1, float* x2, float* x3, float* x4, fl
     atomicAdd(m1, learning_rate * error * x1_val);
     atomicAdd(m2, learning_rate * error * x2_val);
     atomicAdd(m3, learning_rate * error * x3_val);
-    atomicAdd(m4, learning_rate * error * x4_val);
-    atomicAdd(c,  learning_rate * error);
+    atomicAdd(c, learning_rate * error);
 }
 
 // CUDA Kernel function to perform prediction
-__global__ void predict(float* x1, float* x2, float* x3, float* x4, float* y_pred, float* m1, float* m2, float* m3, float* m4, float* c, int n) {
+__global__ void predict(float* x1, float* x2, float* x3, float* y_pred, float* m1, float* m2, float* m3, float* c) {
     int idx = threadIdx.x;
     float x1_val = x1[idx];
     float x2_val = x2[idx];
     float x3_val = x3[idx];
-    float x4_val = x4[idx];
 
-    y_pred[idx] = (*m1) * x1_val + (*m2) * x2_val + (*m3) * x3_val + (*m4) * x4_val + (*c);
+    y_pred[idx] = (*m1) * x1_val + (*m2) * x2_val + (*m3) * x3_val + (*c);
 }
 
 int main() {
@@ -179,7 +176,7 @@ int main() {
     cout << "Training set size: " << trainSet.size() << endl;
     cout << "Testing set size: " << testSet.size() << endl;
     cout << "\n\nTraining phase" << endl;
-    
+
     /* Training */
 
     // number of samples in the training set
@@ -192,7 +189,6 @@ int main() {
     float* h_x1 = (float*)malloc(bytes_train);
     float* h_x2 = (float*)malloc(bytes_train);
     float* h_x3 = (float*)malloc(bytes_train);
-    float* h_x4 = (float*)malloc(bytes_train);
     float* h_y = (float*)malloc(bytes_train);
 
     // Initialize host vectors with training data
@@ -200,39 +196,34 @@ int main() {
         h_x1[i] = trainSet[i].sepalWidth;
         h_x2[i] = trainSet[i].petalLength;
         h_x3[i] = trainSet[i].petalWidth;
-        h_x4[i] = trainSet[i].species;
         h_y[i] = trainSet[i].sepalLength;
     }
 
     // Allocate device vectors
-    float* d_x1, * d_x2, * d_x3, * d_x4, * d_y;
+    float* d_x1, * d_x2, * d_x3, * d_y;
     cudaMalloc(&d_x1, bytes_train);
     cudaMalloc(&d_x2, bytes_train);
     cudaMalloc(&d_x3, bytes_train);
-    cudaMalloc(&d_x4, bytes_train);
     cudaMalloc(&d_y, bytes_train);
 
     // Copy data from host to device
     cudaMemcpy(d_x1, h_x1, bytes_train, cudaMemcpyHostToDevice);
     cudaMemcpy(d_x2, h_x2, bytes_train, cudaMemcpyHostToDevice);
     cudaMemcpy(d_x3, h_x3, bytes_train, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_x4, h_x4, bytes_train, cudaMemcpyHostToDevice);
     cudaMemcpy(d_y, h_y, bytes_train, cudaMemcpyHostToDevice);
 
     // Allocate device variables for m and c
-    float* d_m1, * d_m2, * d_m3, * d_m4, * d_c;
+    float* d_m1, * d_m2, * d_m3, * d_c;
     cudaMalloc(&d_m1, sizeof(float));
     cudaMalloc(&d_m2, sizeof(float));
     cudaMalloc(&d_m3, sizeof(float));
-    cudaMalloc(&d_m4, sizeof(float));
     cudaMalloc(&d_c, sizeof(float));
 
     // Initialize m and c to 0
-    float h_m1 = 0, h_m2 = 0, h_m3 = 0, h_m4 = 0, h_c = 0;
+    float h_m1 = 0, h_m2 = 0, h_m3 = 0, h_c = 0;
     cudaMemcpy(d_m1, &h_m1, sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_m2, &h_m2, sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_m3, &h_m3, sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_m4, &h_m4, sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_c, &h_c, sizeof(float), cudaMemcpyHostToDevice);
 
     // Number of iterations for the training phase
@@ -243,7 +234,7 @@ int main() {
 
     // Call the kernel function for the training phase
     for (int i = 0; i < iterations; i++) {
-        linear_regression << <1, train_n >> > (d_x1, d_x2, d_x3, d_x4, d_y, d_m1, d_m2, d_m3, d_m4, d_c, train_n);
+        linear_regression << < 1, train_n >> > (d_x1, d_x2, d_x3, d_y, d_m1, d_m2, d_m3, d_c);
         cudaDeviceSynchronize();
     }
 
@@ -258,15 +249,14 @@ int main() {
     cudaMemcpy(&h_m1, d_m1, sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(&h_m2, d_m2, sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(&h_m3, d_m3, sizeof(float), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&h_m4, d_m4, sizeof(float), cudaMemcpyDeviceToHost);
     cudaMemcpy(&h_c, d_c, sizeof(float), cudaMemcpyDeviceToHost);
 
     // Print the learned parameters
     cout << "Learned parameters:" << endl;
-    cout << "m1: " << h_m1 << ", m2: " << h_m2 << ", m3: " << h_m3 << ", m4: " << h_m4 << ", c: " << h_c << endl;
+    cout << "m1: " << h_m1 << ", m2: " << h_m2 << ", m3: " << h_m3 << ", c: " << h_c << endl;
 
     cout << "\n\nTesting phase" << endl;
-    
+
     /* Testing */
 
     // number of samples in the testing set
@@ -279,7 +269,6 @@ int main() {
     float* h_x1_test = (float*)malloc(bytes_test);
     float* h_x2_test = (float*)malloc(bytes_test);
     float* h_x3_test = (float*)malloc(bytes_test);
-    float* h_x4_test = (float*)malloc(bytes_test);
     float* h_y_test = (float*)malloc(bytes_test);
 
     // Initialize host vectors with testing data
@@ -287,29 +276,26 @@ int main() {
         h_x1_test[i] = testSet[i].sepalWidth;
         h_x2_test[i] = testSet[i].petalLength;
         h_x3_test[i] = testSet[i].petalWidth;
-        h_x4_test[i] = testSet[i].species;
         h_y_test[i] = testSet[i].sepalLength;
     }
 
     // Allocate device vectors
-    float* d_x1_test, * d_x2_test, * d_x3_test, * d_x4_test, * d_y_pred;
+    float* d_x1_test, * d_x2_test, * d_x3_test, * d_y_pred;
     cudaMalloc(&d_x1_test, bytes_test);
     cudaMalloc(&d_x2_test, bytes_test);
     cudaMalloc(&d_x3_test, bytes_test);
-    cudaMalloc(&d_x4_test, bytes_test);
     cudaMalloc(&d_y_pred, bytes_test);
 
     // Copy data from host to device
     cudaMemcpy(d_x1_test, h_x1_test, bytes_test, cudaMemcpyHostToDevice);
     cudaMemcpy(d_x2_test, h_x2_test, bytes_test, cudaMemcpyHostToDevice);
     cudaMemcpy(d_x3_test, h_x3_test, bytes_test, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_x4_test, h_x4_test, bytes_test, cudaMemcpyHostToDevice);
 
     // Start recording
     start = chrono::high_resolution_clock::now();
 
     // Call the kernel function for the testing phase
-    predict << <1, test_n >> > (d_x1_test, d_x2_test, d_x3_test, d_x4_test, d_y_pred, d_m1, d_m2, d_m3, d_m4, d_c, test_n);
+    predict << < 1, test_n >> > (d_x1_test, d_x2_test, d_x3_test, d_y_pred, d_m1, d_m2, d_m3, d_c);
     cudaDeviceSynchronize();
 
     // Stop recording
@@ -330,35 +316,30 @@ int main() {
 
     cout << "Predicted Sepal Length(cm): " << h_y_test[0] << endl;
     cout << "Actual Sepal Length(cm):" << testSet[0].sepalLength << endl;
-    cout << "Difference(cm): "  << abs(h_y_test[0] - testSet[0].sepalLength) << endl;
+    cout << "Difference(cm): " << abs(h_y_test[0] - testSet[0].sepalLength) << endl;
 
     // Free device memory
     cudaFree(d_x1);
     cudaFree(d_x2);
     cudaFree(d_x3);
-    cudaFree(d_x4);
     cudaFree(d_y);
     cudaFree(d_m1);
     cudaFree(d_m2);
     cudaFree(d_m3);
-    cudaFree(d_m4);
     cudaFree(d_c);
     cudaFree(d_x1_test);
     cudaFree(d_x2_test);
     cudaFree(d_x3_test);
-    cudaFree(d_x4_test);
     cudaFree(d_y_pred);
 
     // Free host memory
     free(h_x1);
     free(h_x2);
     free(h_x3);
-    free(h_x4);
     free(h_y);
     free(h_x1_test);
     free(h_x2_test);
     free(h_x3_test);
-    free(h_x4_test);
     free(h_y_test);
     free(h_y_pred);
 
