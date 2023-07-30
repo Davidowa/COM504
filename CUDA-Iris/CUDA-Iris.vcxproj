@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{4C061937-627E-418F-8472-324DED5A5884}</ProjectGuid>
-    <RootNamespace>CPU_Iris</RootNamespace>
+    <ProjectGuid>{419CD7F9-2728-4631-BEC2-BCDA0D4986AC}</ProjectGuid>
+    <RootNamespace>CUDA_Iris</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CPU-Iris", "CPU-Iris.vcxproj", "{4C061937-627E-418F-8472-324DED5A5884}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CUDA-Iris", "CUDA-Iris.vcxproj", "{419CD7F9-2728-4631-BEC2-BCDA0D4986AC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4C061937-627E-418F-8472-324DED5A5884}.Debug|x64.ActiveCfg = Debug|x64
-		{4C061937-627E-418F-8472-324DED5A5884}.Debug|x64.Build.0 = Debug|x64
-		{4C061937-627E-418F-8472-324DED5A5884}.Release|x64.ActiveCfg = Release|x64
-		{4C061937-627E-418F-8472-324DED5A5884}.Release|x64.Build.0 = Release|x64
+		{419CD7F9-2728-4631-BEC2-BCDA0D4986AC}.Debug|x64.ActiveCfg = Debug|x64
+		{419CD7F9-2728-4631-BEC2-BCDA0D4986AC}.Debug|x64.Build.0 = Debug|x64
+		{419CD7F9-2728-4631-BEC2-BCDA0D4986AC}.Release|x64.ActiveCfg = Release|x64
+		{419CD7F9-2728-4631-BEC2-BCDA0D4986AC}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {AD301129-8FE4-4EE1-84D9-860B2267458D}
+		SolutionGuid = {61C5E5EE-057C-49BC-8BF2-A9E74204336B}
 	EndGlobalSection
 EndGlobal
