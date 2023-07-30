@@ -313,10 +313,10 @@ int main() {
     cout << "Mean Absolute Error: " << mean_absolute_error(h_y_test, h_y_pred, test_n) << endl;
     cout << "Mean Squared Error: " << mean_squared_error(h_y_test, h_y_pred, test_n) << endl;
     cout << "Root Mean Squared Error: " << root_mean_squared_error(h_y_test, h_y_pred, test_n) << endl;
-
-    cout << "Predicted Sepal Length(cm): " << h_y_test[0] << endl;
+    
+    cout << "Predicted Sepal Length(cm): " << h_y_pred[0] << endl;
     cout << "Actual Sepal Length(cm):" << testSet[0].sepalLength << endl;
-    cout << "Difference(cm): " << abs(h_y_test[0] - testSet[0].sepalLength) << endl;
+    cout << "Difference(cm): " << abs(h_y_pred[0] - testSet[0].sepalLength) << endl << endl;
 
     // Free device memory
     cudaFree(d_x1);
