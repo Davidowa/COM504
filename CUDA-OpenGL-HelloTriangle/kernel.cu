@@ -58,5 +58,5 @@ int main(int argc, char** argv) {
     // Enter GLUT event processing cycle
     glutMainLoop();
 
-    return 1;
+    return 0;
 }
